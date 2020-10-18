@@ -1,27 +1,21 @@
 Version 1:
-Basic realization without error detect.
+Basic realization with error detect. It will reset the error input to 0.
+(Using string to check)
+
+Warning: This version codes doesn't release the memory!
 
 Version 2:
-Basic realization with error detect. And it uses string to check the input.
+The IO time is too large that I can't get the result.
+Including the IO time, calculating vectors of 200000 elements need more than 5 seconds.
+So the 200000000 may need 5000 seconds or longer.
+
+Warning: This version codes doesn't release the memory!
 
 Version 3:
-I add a time counter, but there is something wrong with the time.
+In this version, I use the binary input and output, it greatly reduces the IO time to 118s(almost 42 times faster).
+Just for calculating, it need 650(+-30)ms to calculate for two vectors each with 200M elements.
+And I have changed the error detecting way. 
 
 Version 4:
-After checking my code, I solved the time problem. But the program is slow.
-Calculating vectors of 200000 elements need more than 5 seconds.
-So the 200000000 may need 5000 seconds or longer.
-By the way, I change the error status and reset the error input with 0.
-
-Version 5:
-In this version, I use the binary input and output, it reduce the total time to 119s(almost 42 times faster).
-But in this way, I can't find out whether the input is legal or not.
-
-Warning: The old version codes doesn't release the memory!
-
-Version 6:
-Ignoring the IO time, it need 383ms to calculate for two vectors each with 100M elements.
-
-Version 7:
-By using the multithreading, the calculate time is reduced to almost 284ms for 200M elements.
-But at the first time, I chose the atomic variable and it was very slow. 
+By using the multithreading, the calculate time is reduced to almost 500(+-50)ms for 200M elements.
+But at the first time, I chose the atomic variable and it was slower. 
