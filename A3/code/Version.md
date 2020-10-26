@@ -29,3 +29,6 @@ Using cuda to calculate, but it needs more time.
 version 6:
 Using the code from "GPU高性能编程CUDA实战", it only needs 36us for two vectors of 200000000 elements.
 That proves my last code didn't tap its potential somehow.
+
+
+Think about SIMD!
