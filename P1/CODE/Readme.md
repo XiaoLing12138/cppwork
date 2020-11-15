@@ -21,7 +21,9 @@ __________________________________________
 -And compared with openBlas.
 
 |           Matrix             |   My Time(x86 & x64)   |   OpenBlas Time(x64)     |
+| ---------------------------- | :--------------------: | :----------------------: |
 |   200*50000 and 50000*200    |        4.0s+-          |        66ms+-            |
+| ---------------------------- | :--------------------: | :----------------------: |
 |  2000*50000 and 50000*2000   |        747s+-          |        3.9s+-            |
 
 -My program is much more slower.
@@ -34,6 +36,7 @@ __________________________________________
 -complex computational problems. Thus, I decide to use CUDA to do the calculation.
 
 |           Matrix             |   Calculating Time(x64)  |   Writing Memory Time(x64))  |
+| ---------------------------- | :----------------------: | :--------------------------: |
 |  2000*50000 and 50000*2000   |          50us+-          |      16s+-(shift to 7s+-)    |
 
 -(Reference: https://blog.csdn.net/qq_38128961/article/details/100151316)
@@ -52,6 +55,7 @@ __________________________________________
 
 
 |           Matrix             |   Calculating Time(x64)  |   Writing Memory Time(x64))  |
+| ---------------------------- | :----------------------: | :--------------------------: |
 |  2000*50000 and 50000*2000   |          40us+-          |             7s+-             |
 
 -Running the second time                  ->2us+-
@@ -69,6 +73,7 @@ version 5:  (Important)
 
 #ACTUALLY#
 |           Matrix             |   Calculating Time(x64)  |
+| ---------------------------- | :----------------------: |
 |  2000*50000 and 50000*2000   |         6000ms+-         |                     
 
 -It seems slower than openBlas, I think it is because my kernel fuction is not as good as their optimization.
@@ -80,4 +85,5 @@ version 5:  (Important)
 -This time I decide to use the cuBlas, and it has completely find out the computing power of GPU.
 
 |           Matrix             |   Calculating Time(x64)  |
+| ---------------------------- | :----------------------: |
 |  2000*50000 and 50000*2000   |           95ms+-         | 
