@@ -4,11 +4,11 @@
 
 #include <iostream>
 #include <cstdio>
-#include <ctime>
-#include <chrono>
 
 const int threads_sum = 16;
 const int BLOCK_SIZE = threads_sum;
+const int ROW = 2000;
+const int COL = 50000;
 
 __global__ void Kernel(float* devic_a, float* devic_b, float* devic_c,
 						size_t n, size_t m)
@@ -57,10 +57,10 @@ int main()
 
 	ios::sync_with_stdio(false);
 
-	a.rows = 2000;
-	a.cols = 50000;
-	b.rows = 50000;
-	b.cols = 2000;
+	a.rows = ROW;
+	a.cols = COL;
+	b.rows = COL;
+	b.cols = ROW;
 	a.step = a.cols;
 	b.step = b.cols;
 	a.data = (float*)malloc(sizeof(float) * a.rows * a.cols);
@@ -87,9 +87,9 @@ int main()
 		return 0;
 	}
 
-	c.rows = 2000;
-	c.cols = 2000;
-	c.step = 2000;
+	c.rows = ROW;
+	c.cols = ROW;
+	c.step = c.cols;
 	c.data = (float*)malloc(sizeof(float) * a.rows * b.cols);
 
 	matrixMul(a, b, c, grid, block);
@@ -97,7 +97,6 @@ int main()
 	free(a.data);
 	free(b.data);
 	free(c.data);
-
 	return 0;
 }
 
@@ -112,11 +111,11 @@ void matrixMul(Matrix a, Matrix b, Matrix c, dim3 grid, dim3 block)
 	cudaEventCreate(&start);
 	cudaEventCreate(&stop);
 
-	cudaEventRecord(start, 0);
-
 	cudaMalloc((void**)&devic_a, a.rows * a.cols * sizeof(float));
 	cudaMalloc((void**)&devic_b, b.rows * b.cols * sizeof(float));
 	cudaMalloc((void**)&devic_c, c.rows * c.cols * sizeof(float));
+
+	cudaEventRecord(start, 0);
 
 	cudaMemcpy(devic_a, a.data, a.rows * a.cols * sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemcpy(devic_b, b.data, b.rows * b.cols * sizeof(float), cudaMemcpyHostToDevice);

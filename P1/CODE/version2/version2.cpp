@@ -8,9 +8,15 @@
 #include "struct.h" 
 using namespace std;
 
-float ao[2000*50000];
-float bo[2000*50000];
-float co[2000*2000];
+const int AOROW = 2000;
+const int AOCOL = 50000;
+const int BOROW = 50000;
+const int BOCOL = 2000;
+
+const int AROW = 200;
+const int ACOL = 50000;
+const int BROW = 50000;
+const int BCOL = 200;
 
 Matrix matrixMul(Matrix& a, Matrix& b);
 void ThreadProc1(Matrix a, Matrix b, Matrix c);
@@ -26,29 +32,53 @@ void ThreadProc10(Matrix a, Matrix b, Matrix c);
 
 int main()
 {
+	float* ao;
+	float* bo;
+	float* co;
+
+	ao = (float*)malloc(sizeof(float) * AOROW * AOCOL);
+	if (ao != 0)
+	{
+		memset(ao, 0, sizeof(float) * AOROW * AOCOL);
+	}
+	bo = (float*)malloc(sizeof(float) * BOROW * BOCOL);
+	if (bo != 0)
+	{
+		memset(bo, 0, sizeof(float) * BOROW * BOCOL);
+	}
+	co = (float*)malloc(sizeof(float) * AOROW * BOCOL);
+	if (co != 0)
+	{
+		memset(co, 0, sizeof(float) * AOROW * BOCOL);
+	}
+
 	ao[0] = 1.0;
 	bo[0] = 1.0;
-	ao[1999*50000+49999] = 2.0;
-	bo[1999*50000+49999] = 2.0;
+	ao[AOROW * AOCOL - 1] = 2.0;
+	bo[BOROW * BOCOL - 1] = 2.0;
 
 	chrono::steady_clock::time_point starto = chrono::steady_clock::now();
 
-	cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 2000, 2000, 50000, 1, ao, 50000, bo, 2000, 0, co, 2000);
+	cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, AOROW, BOCOL, AOCOL, 1, ao, AOCOL, bo, BOCOL, 0, co, BOCOL);
 
 	chrono::steady_clock::time_point endo = chrono::steady_clock::now();
 
-	printf("%0.2f %0.2f\n", co[0], co[1999 * 2000 + 1999]);
+	printf("%0.2f %0.2f\n", co[0], co[AOROW * BOCOL - 1]);
 
 	cout << "(2000*50000 and 50000*2000) OpenBlas takes "
-		<< chrono::duration_cast<chrono::seconds>(endo - starto).count()
-		<< "s.\n";
+		<< chrono::duration_cast<chrono::milliseconds>(endo - starto).count()
+		<< "ms.\n";
+
+	free(ao);
+	free(bo);
+	free(co);
 
 	Matrix a, b, c;
-	
-	a.rows = 200;
-	a.cols = 50000;
-	b.rows = 50000;
-	b.cols = 200;
+
+	a.rows = AROW;
+	a.cols = ACOL;
+	b.rows = BROW;
+	b.cols = BCOL;
 	a.step = a.cols;
 	b.step = b.cols;
 	a.data = (float*)malloc(sizeof(float) * a.rows * a.cols);
@@ -80,8 +110,8 @@ int main()
 	printf("%0.2f %0.2f\n", c.data[0], c.data[c.cols * c.rows - 1]);
 
 	cout << "(200*50000 and 50000*200) Mine takes "
-		<< chrono::duration_cast<chrono::seconds>(end - start).count()
-		<< "s.\n";
+		<< chrono::duration_cast<chrono::milliseconds>(end - start).count()
+		<< "ms.\n";
 
 	free(a.data);
 	free(b.data);
@@ -101,7 +131,7 @@ Matrix matrixMul(Matrix& a, Matrix& b)
 		printf("Your matrixes do not match!");
 		return c;
 	}
-	
+
 	c.rows = a.rows;
 	c.cols = b.cols;
 	c.step = c.cols;
@@ -138,7 +168,7 @@ Matrix matrixMul(Matrix& a, Matrix& b)
 
 void ThreadProc1(const Matrix a, const Matrix b, Matrix c)
 {
-	for (size_t i = 0; i < (c.rows*0.1); i++)
+	for (size_t i = 0; i < (c.rows * 0.1); i++)
 	{
 		for (size_t k = 0; k < c.cols; k++)
 		{
@@ -149,25 +179,16 @@ void ThreadProc1(const Matrix a, const Matrix b, Matrix c)
 				if (j + 10 < a.cols)
 				{
 					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
+					temp += a.data[i * a.step + j + 1] * b.data[(j + 1) * b.step + k];
+					temp += a.data[i * a.step + j + 2] * b.data[(j + 2) * b.step + k];
+					temp += a.data[i * a.step + j + 3] * b.data[(j + 3) * b.step + k];
+					temp += a.data[i * a.step + j + 4] * b.data[(j + 4) * b.step + k];
+					temp += a.data[i * a.step + j + 5] * b.data[(j + 5) * b.step + k];
+					temp += a.data[i * a.step + j + 6] * b.data[(j + 6) * b.step + k];
+					temp += a.data[i * a.step + j + 7] * b.data[(j + 7) * b.step + k];
+					temp += a.data[i * a.step + j + 8] * b.data[(j + 8) * b.step + k];
+					temp += a.data[i * a.step + j + 9] * b.data[(j + 9) * b.step + k];
+					j += 10;
 				}
 				else
 				{
@@ -193,25 +214,16 @@ void ThreadProc2(const Matrix a, const Matrix b, Matrix c)
 				if (j + 10 < a.cols)
 				{
 					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
+					temp += a.data[i * a.step + j + 1] * b.data[(j + 1) * b.step + k];
+					temp += a.data[i * a.step + j + 2] * b.data[(j + 2) * b.step + k];
+					temp += a.data[i * a.step + j + 3] * b.data[(j + 3) * b.step + k];
+					temp += a.data[i * a.step + j + 4] * b.data[(j + 4) * b.step + k];
+					temp += a.data[i * a.step + j + 5] * b.data[(j + 5) * b.step + k];
+					temp += a.data[i * a.step + j + 6] * b.data[(j + 6) * b.step + k];
+					temp += a.data[i * a.step + j + 7] * b.data[(j + 7) * b.step + k];
+					temp += a.data[i * a.step + j + 8] * b.data[(j + 8) * b.step + k];
+					temp += a.data[i * a.step + j + 9] * b.data[(j + 9) * b.step + k];
+					j += 10;
 				}
 				else
 				{
@@ -237,25 +249,16 @@ void ThreadProc3(const Matrix a, const Matrix b, Matrix c)
 				if (j + 10 < a.cols)
 				{
 					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
+					temp += a.data[i * a.step + j + 1] * b.data[(j + 1) * b.step + k];
+					temp += a.data[i * a.step + j + 2] * b.data[(j + 2) * b.step + k];
+					temp += a.data[i * a.step + j + 3] * b.data[(j + 3) * b.step + k];
+					temp += a.data[i * a.step + j + 4] * b.data[(j + 4) * b.step + k];
+					temp += a.data[i * a.step + j + 5] * b.data[(j + 5) * b.step + k];
+					temp += a.data[i * a.step + j + 6] * b.data[(j + 6) * b.step + k];
+					temp += a.data[i * a.step + j + 7] * b.data[(j + 7) * b.step + k];
+					temp += a.data[i * a.step + j + 8] * b.data[(j + 8) * b.step + k];
+					temp += a.data[i * a.step + j + 9] * b.data[(j + 9) * b.step + k];
+					j += 10;
 				}
 				else
 				{
@@ -281,25 +284,16 @@ void ThreadProc4(const Matrix a, const Matrix b, Matrix c)
 				if (j + 10 < a.cols)
 				{
 					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
+					temp += a.data[i * a.step + j + 1] * b.data[(j + 1) * b.step + k];
+					temp += a.data[i * a.step + j + 2] * b.data[(j + 2) * b.step + k];
+					temp += a.data[i * a.step + j + 3] * b.data[(j + 3) * b.step + k];
+					temp += a.data[i * a.step + j + 4] * b.data[(j + 4) * b.step + k];
+					temp += a.data[i * a.step + j + 5] * b.data[(j + 5) * b.step + k];
+					temp += a.data[i * a.step + j + 6] * b.data[(j + 6) * b.step + k];
+					temp += a.data[i * a.step + j + 7] * b.data[(j + 7) * b.step + k];
+					temp += a.data[i * a.step + j + 8] * b.data[(j + 8) * b.step + k];
+					temp += a.data[i * a.step + j + 9] * b.data[(j + 9) * b.step + k];
+					j += 10;
 				}
 				else
 				{
@@ -325,25 +319,16 @@ void ThreadProc5(const Matrix a, const Matrix b, Matrix c)
 				if (j + 10 < a.cols)
 				{
 					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
+					temp += a.data[i * a.step + j + 1] * b.data[(j + 1) * b.step + k];
+					temp += a.data[i * a.step + j + 2] * b.data[(j + 2) * b.step + k];
+					temp += a.data[i * a.step + j + 3] * b.data[(j + 3) * b.step + k];
+					temp += a.data[i * a.step + j + 4] * b.data[(j + 4) * b.step + k];
+					temp += a.data[i * a.step + j + 5] * b.data[(j + 5) * b.step + k];
+					temp += a.data[i * a.step + j + 6] * b.data[(j + 6) * b.step + k];
+					temp += a.data[i * a.step + j + 7] * b.data[(j + 7) * b.step + k];
+					temp += a.data[i * a.step + j + 8] * b.data[(j + 8) * b.step + k];
+					temp += a.data[i * a.step + j + 9] * b.data[(j + 9) * b.step + k];
+					j += 10;
 				}
 				else
 				{
@@ -369,25 +354,16 @@ void ThreadProc6(const Matrix a, const Matrix b, Matrix c)
 				if (j + 10 < a.cols)
 				{
 					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
+					temp += a.data[i * a.step + j + 1] * b.data[(j + 1) * b.step + k];
+					temp += a.data[i * a.step + j + 2] * b.data[(j + 2) * b.step + k];
+					temp += a.data[i * a.step + j + 3] * b.data[(j + 3) * b.step + k];
+					temp += a.data[i * a.step + j + 4] * b.data[(j + 4) * b.step + k];
+					temp += a.data[i * a.step + j + 5] * b.data[(j + 5) * b.step + k];
+					temp += a.data[i * a.step + j + 6] * b.data[(j + 6) * b.step + k];
+					temp += a.data[i * a.step + j + 7] * b.data[(j + 7) * b.step + k];
+					temp += a.data[i * a.step + j + 8] * b.data[(j + 8) * b.step + k];
+					temp += a.data[i * a.step + j + 9] * b.data[(j + 9) * b.step + k];
+					j += 10;
 				}
 				else
 				{
@@ -413,25 +389,16 @@ void ThreadProc7(const Matrix a, const Matrix b, Matrix c)
 				if (j + 10 < a.cols)
 				{
 					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
+					temp += a.data[i * a.step + j + 1] * b.data[(j + 1) * b.step + k];
+					temp += a.data[i * a.step + j + 2] * b.data[(j + 2) * b.step + k];
+					temp += a.data[i * a.step + j + 3] * b.data[(j + 3) * b.step + k];
+					temp += a.data[i * a.step + j + 4] * b.data[(j + 4) * b.step + k];
+					temp += a.data[i * a.step + j + 5] * b.data[(j + 5) * b.step + k];
+					temp += a.data[i * a.step + j + 6] * b.data[(j + 6) * b.step + k];
+					temp += a.data[i * a.step + j + 7] * b.data[(j + 7) * b.step + k];
+					temp += a.data[i * a.step + j + 8] * b.data[(j + 8) * b.step + k];
+					temp += a.data[i * a.step + j + 9] * b.data[(j + 9) * b.step + k];
+					j += 10;
 				}
 				else
 				{
@@ -457,25 +424,16 @@ void ThreadProc8(const Matrix a, const Matrix b, Matrix c)
 				if (j + 10 < a.cols)
 				{
 					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
+					temp += a.data[i * a.step + j + 1] * b.data[(j + 1) * b.step + k];
+					temp += a.data[i * a.step + j + 2] * b.data[(j + 2) * b.step + k];
+					temp += a.data[i * a.step + j + 3] * b.data[(j + 3) * b.step + k];
+					temp += a.data[i * a.step + j + 4] * b.data[(j + 4) * b.step + k];
+					temp += a.data[i * a.step + j + 5] * b.data[(j + 5) * b.step + k];
+					temp += a.data[i * a.step + j + 6] * b.data[(j + 6) * b.step + k];
+					temp += a.data[i * a.step + j + 7] * b.data[(j + 7) * b.step + k];
+					temp += a.data[i * a.step + j + 8] * b.data[(j + 8) * b.step + k];
+					temp += a.data[i * a.step + j + 9] * b.data[(j + 9) * b.step + k];
+					j += 10;
 				}
 				else
 				{
@@ -501,25 +459,16 @@ void ThreadProc9(const Matrix a, const Matrix b, Matrix c)
 				if (j + 10 < a.cols)
 				{
 					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
+					temp += a.data[i * a.step + j + 1] * b.data[(j + 1) * b.step + k];
+					temp += a.data[i * a.step + j + 2] * b.data[(j + 2) * b.step + k];
+					temp += a.data[i * a.step + j + 3] * b.data[(j + 3) * b.step + k];
+					temp += a.data[i * a.step + j + 4] * b.data[(j + 4) * b.step + k];
+					temp += a.data[i * a.step + j + 5] * b.data[(j + 5) * b.step + k];
+					temp += a.data[i * a.step + j + 6] * b.data[(j + 6) * b.step + k];
+					temp += a.data[i * a.step + j + 7] * b.data[(j + 7) * b.step + k];
+					temp += a.data[i * a.step + j + 8] * b.data[(j + 8) * b.step + k];
+					temp += a.data[i * a.step + j + 9] * b.data[(j + 9) * b.step + k];
+					j += 10;
 				}
 				else
 				{
@@ -545,25 +494,16 @@ void ThreadProc10(const Matrix a, const Matrix b, Matrix c)
 				if (j + 10 < a.cols)
 				{
 					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
-					temp += a.data[i * a.step + j] * b.data[j * b.step + k];
-					j++;
+					temp += a.data[i * a.step + j + 1] * b.data[(j + 1) * b.step + k];
+					temp += a.data[i * a.step + j + 2] * b.data[(j + 2) * b.step + k];
+					temp += a.data[i * a.step + j + 3] * b.data[(j + 3) * b.step + k];
+					temp += a.data[i * a.step + j + 4] * b.data[(j + 4) * b.step + k];
+					temp += a.data[i * a.step + j + 5] * b.data[(j + 5) * b.step + k];
+					temp += a.data[i * a.step + j + 6] * b.data[(j + 6) * b.step + k];
+					temp += a.data[i * a.step + j + 7] * b.data[(j + 7) * b.step + k];
+					temp += a.data[i * a.step + j + 8] * b.data[(j + 8) * b.step + k];
+					temp += a.data[i * a.step + j + 9] * b.data[(j + 9) * b.step + k];
+					j += 10;
 				}
 				else
 				{
