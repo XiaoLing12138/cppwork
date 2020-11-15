@@ -1,5 +1,5 @@
 __________________________________________
-Windows 10
+Windows 10\n
 Intel i7-9750H @2.60Hz
 Intel UHD Graphics 630
 NVIDIA GTX 1660 Ti
