@@ -1,3 +1,9 @@
+__________________________________________
+Windows 10
+Intel i7-9750H @2.60Hz
+Intel UHD Graphics 630
+NVIDIA GTX 1660 Ti
+__________________________________________
 Version1:
 In this version, I implement the normal functions like:
 1. A struct for Matrix
@@ -16,7 +22,7 @@ And compared with openBlas.
 
 Matrix                        My Time(x86 & x64)       OpenBlas Time(x64)
 200*50000 and 50000*200            4.0s+-                   66ms+-
-2000*50000 and 50000*2000          684s+-                   3.9s+-
+2000*50000 and 50000*2000          747s+-                   3.9s+-
 My program is much more slower.
 
 ------------------------------------------------------------------------------------------------------
@@ -63,7 +69,7 @@ Matrix                              Calculating Time(x64)
 2000*50000 and 50000*2000                6000ms+-                         
 
 It seems slower than openBlas, I think it is because my kernel fuction is not as good as their optimization.
-But comparing to my original, it is faster 113 times.
+But comparing to my original, it is faster 125 times.
 
 ------------------------------------------------------------------------------------------------------
 
