@@ -1,3 +1,4 @@
+#include <cstring>
 #include "Matrix.h"
 
 Matrix::Matrix()
