@@ -4,7 +4,7 @@
 1. Computer: Lenovo LEGION Y700P 2019
 2. Windows Version: Windows 10 64bits
 3. CPU: Intel(R) Core(TM) i7-9750H @2.60GHz 2.59GHz
-4. RAM: 16.0 GB (15.9 GB)
+4. RAM: DDR4 16.0 GB (15.9 GB)
 5. GPU: Intel(R) HUD Graphics 630 / NVIDIA GeForce GTX 1660 Ti
 6. OpenCV: 4.5.0
 7. Compiler: Visual Studio 2019
