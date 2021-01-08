@@ -1,3 +1,4 @@
+#pragma GCC optimize(3, "Ofast", "inline")
 #include <opencv2/opencv.hpp>
 #include <cstdio>
 #include <iostream>
